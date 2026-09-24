@@ -1,4 +1,4 @@
- # CRM Pulse: Real-Time Sales Intelligence Platform for Odoo 17
+# CRM Pulse: Real-Time Sales Intelligence Platform for Odoo 17
 
 ![Odoo Version](https://img.shields.io/badge/Odoo-17.0-purple.svg)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)
@@ -52,6 +52,9 @@ Moving beyond standard API consumers (like Shopify bridges), CRM Pulse turns Odo
 |  | - PulseBusService (Reconnection-aware WebSocket Listener)                                  |  |
 |  +---------------------------------------------------------------------------------------------+  |
 +---------------------------------------------------------------------------------------------------+
+```
+
+---
 
 ## ✨ Key Features
 
@@ -78,6 +81,9 @@ Moving beyond standard API consumers (like Shopify bridges), CRM Pulse turns Odo
 
 ---
 
+## 📁 Repository Structure
+
+```text
 crm_pulse/
 │
 ├── __manifest__.py
@@ -123,7 +129,7 @@ crm_pulse/
 ├── views/
 │   ├── crm_lead_views.xml        # CRM Lead form & kanban extensions
 │   ├── pulse_config_views.xml    # Pulse management views
-│   └── menu_items.xml            # Client Action & module menus
+│   └── menu_items.xml            # Client Action & menu entries
 │
 ├── report/
 │   ├── pipeline_sla_report.xml   # QWeb PDF board report template
@@ -133,6 +139,9 @@ crm_pulse/
     ├── test_api.py               # REST API & Rate limit unit tests
     ├── test_scoring.py           # Scoring engine tests
     └── test_sla.py               # SLA calculation & escalation tests
+```
+
+---
 
 ## 🚀 Installation & Setup
 
@@ -144,14 +153,16 @@ crm_pulse/
 
 1. **Clone the Repository**:
    Clone `crm_pulse` into your custom add-ons directory:
-   
+   ```bash
    cd /path/to/odoo/custom_addons
-   git clone https://github.com/your-username/crm_pulse.git
+   git clone [https://github.com/your-username/crm_pulse.git](https://github.com/your-username/crm_pulse.git)
+   ```
 
 2. **Update Odoo Addons Path**:
    Ensure your `odoo.conf` file includes the path to `custom_addons`:
-   
+   ```ini
    addons_path = /path/to/odoo/addons,/path/to/odoo/custom_addons
+   ```
 
 3. **Install the Module**:
    - Restart your Odoo 17 instance.
@@ -166,12 +177,13 @@ crm_pulse/
 ### 1. Authenticate & Check Token Scopes
 
 **Request:**
-
-curl -X GET "https://your-odoo-domain.com/api/v1/me" \
+```bash
+curl -X GET "[https://your-odoo-domain.com/api/v1/me](https://your-odoo-domain.com/api/v1/me)" \
   -H "Authorization: Bearer YOUR_API_KEY_OR_JWT"
+```
 
 **Response (`200 OK`):**
-
+```json
 {
   "status": "success",
   "data": {
@@ -183,12 +195,13 @@ curl -X GET "https://your-odoo-domain.com/api/v1/me" \
     }
   }
 }
+```
 
 ### 2. Idempotent Lead Creation
 
 **Request:**
-
-curl -X POST "https://your-odoo-domain.com/api/v1/leads" \
+```bash
+curl -X POST "[https://your-odoo-domain.com/api/v1/leads](https://your-odoo-domain.com/api/v1/leads)" \
   -H "Authorization: Bearer YOUR_API_KEY_OR_JWT" \
   -H "Idempotency-Key: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d" \
   -H "Content-Type: application/json" \
@@ -201,9 +214,10 @@ curl -X POST "https://your-odoo-domain.com/api/v1/leads" \
       "company_size": "250+"
     }
   }'
+```
 
 **Response (`201 Created`):**
-
+```json
 {
   "status": "success",
   "data": {
@@ -215,6 +229,7 @@ curl -X POST "https://your-odoo-domain.com/api/v1/leads" \
     "assigned_to": "Enterprise Sales Team EMEA"
   }
 }
+```
 
 ---
 
@@ -244,7 +259,9 @@ curl -X POST "https://your-odoo-domain.com/api/v1/leads" \
 
 Execute Python Unit & Integration Tests via the official Odoo CLI test runner:
 
+```bash
 python3 odoo-bin -c /path/to/odoo.conf -d test_db -i crm_pulse --test-enable --stop-after-init
+```
 
 ---
 
