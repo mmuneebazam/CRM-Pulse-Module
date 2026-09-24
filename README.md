@@ -11,16 +11,51 @@ Moving beyond standard API consumers (like Shopify bridges), CRM Pulse turns Odo
 
 ---
 
-## 🏗 System Architecture
+## 🏗️ System Architecture
 
+```text
                               +---------------------------------------+
-                              |    External Systems / Webhooks       |
+                              |    External Systems / Webhooks        |
                               +---------------------------------------+
                                                  |
                                  POST /api/v1/leads (JWT / API Key)
                                                  v
-+---------------------------------------------------------------------------------------------------+| Odoo 17 Application Core                                                                         ||                                                                                                   ||  +--------------------+      +------------------------+      +---------------------------------+  ||  | REST API Engine    | ---> | CRM Pulse Logic Engine | ---> | Automated CRM Core              |  ||  | (Controllers/v1)   |      | - Idempotency Guard    |      | - Score Calculator              |  ||  | - Hashed Keys      |      | - SLA Policy Resolver  |      | - Territory & Workload Assign   |  ||  | - Rate Limiter     |      | - Deduplication Engine |      | - SLA Sweep & Escalation        |  ||  +--------------------+      +------------------------+      +---------------------------------+  ||                                          |                                                        ||                                          v                                                        ||                              +------------------------+                                           ||                              | Event Bus Dispatcher   |                                           ||                              | (crm.pulse.event queue)|                                           ||                              +------------------------+                                           ||                                          |                                                        |+------------------------------------------|--------------------------------------------------------+|bus.bus / WebSocket Transport|v+---------------------------------------------------------------------------------------------------+| Odoo 17 Web Client (Backend)                                                                      ||                                                                                                   ||  +---------------------------------------------------------------------------------------------+  ||  | Live Executive Dashboard (OWL 3 Components)                                                 |  ||  | - PulseKpiStrip (Live Metrics)                                                              |  ||  | - PulseLeadList & PulseLeadCard (Virtualized View)                                          |  ||  | - PulseBusService (Reconnection-aware WebSocket Listener)                                  |  ||  +---------------------------------------------------------------------------------------------+  |+---------------------------------------------------------------------------------------------------+
----
++---------------------------------------------------------------------------------------------------+
+| Odoo 17 Application Core                                                                         |
+|                                                                                                   |
+|  +--------------------+      +------------------------+      +---------------------------------+  |
+|  | REST API Engine    | ---> | CRM Pulse Logic Engine | ---> | Automated CRM Core              |  |
+|  | (Controllers/v1)   |      | - Idempotency Guard    |      | - Score Calculator              |  |
+|  | - Hashed Keys      |      | - SLA Policy Resolver  |      | - Territory & Workload Assign   |  |
+|  | - Rate Limiter     |      | - Deduplication Engine |      | - SLA Sweep & Escalation        |  |
+|  +--------------------+      +------------------------+      +---------------------------------+  |
+|                                          |                                                        |
+|                                          v                                                        |
+|                              +------------------------+                                           |
+|                              | Event Bus Dispatcher   |                                           |
+|                              | (crm.pulse.event queue)|                                           |
+|                              +------------------------+                                           |
+|                                          |                                                        |
++------------------------------------------|--------------------------------------------------------+
+                                           |
+                                           v
+                              +------------------------+
+                              | bus.bus / WebSocket    |
+                              | Real-Time Transport    |
+                              +------------------------+
+                                           |
+                                           v
++---------------------------------------------------------------------------------------------------+
+| Odoo 17 Web Client (Backend)                                                                      |
+|                                                                                                   |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | Live Executive Dashboard (OWL Components)                                                   |  |
+|  |                                                                                             |  |
+|  | - PulseKpiStrip (Live Metrics)                                                              |  |
+|  | - PulseLeadList & PulseLeadCard (Virtualized View)                                          |  |
+|  | - PulseBusService (Reconnection-aware WebSocket Listener)                                  |  |
+|  +---------------------------------------------------------------------------------------------+  |
++---------------------------------------------------------------------------------------------------+
 
 ## ✨ Key Features
 
@@ -49,8 +84,62 @@ Moving beyond standard API consumers (like Shopify bridges), CRM Pulse turns Odo
 
 ## 📁 Repository Structure
 
-crm_pulse/├── manifest.py├── init.py├── controllers/│   ├── init.py│   ├── api_v1.py                 # REST API endpoints (/api/v1/leads, /me, /health)│   └── webhook_inbound.py        # Signature-verified webhook consumer├── models/│   ├── init.py│   ├── pulse_config.py           # Engine & rate limit settings│   ├── pulse_api_key.py          # Secure hashed key management│   ├── crm_lead.py               # CRM Lead extension (Scoring & SLA)│   ├── score_rule.py             # Rule builder engine│   ├── sla_policy.py             # SLA target & escalation configurations│   ├── pulse_event.py            # Outbound event log & queue│   └── pulse_job.py              # Background batch worker model├── services/│   ├── init.py│   ├── auth.py                   # API Key & JWT authorization hooks│   ├── scoring_engine.py         # Lead score calculator logic│   ├── sla_engine.py             # SLA deadline & sweep calculator│   └── event_bus.py              # bus.bus notification wrapper├── static/│   └── src/│       ├── pulse_dashboard.js    # Root OWL 3 Client Action│       ├── pulse_lead_card.js    # Lead Card OWL Component│       ├── pulse_bus_service.js # Custom Bus Listener Service│       ├── pulse_dashboard.xml  # QWeb templates for OWL│       └── pulse_dashboard.scss # Dashboard styling├── security/│   ├── ir.model.access.csv       # ACL permissions│   └── security_groups.xml       # User, Manager & Integration Admin rules├── data/│   └── cron_jobs.xml             # SLA sweeps & batch re-scoring cron jobs├── views/│   ├── crm_lead_views.xml        # CRM Lead form & kanban extensions│   ├── pulse_config_views.xml    # Pulse management views│   └── menu_items.xml            # Client Action & module menus├── report/│   ├── pipeline_sla_report.xml   # QWeb PDF board report template│   └── opportunity_onepager.xml  # Single Deal PDF summary template└── tests/├── test_api.py               # REST API & Rate limit unit tests├── test_scoring.py           # Scoring engine tests└── test_sla.py               # SLA calculation & escalation tests
----
+```text
+crm_pulse/
+│
+├── __manifest__.py
+├── __init__.py
+│
+├── controllers/
+│   ├── __init__.py
+│   ├── api_v1.py                 # REST API endpoints (/api/v1/leads, /me, /health)
+│   └── webhook_inbound.py        # Signature-verified webhook consumer
+│
+├── models/
+│   ├── __init__.py
+│   ├── pulse_config.py           # Engine & rate limit settings
+│   ├── pulse_api_key.py          # Secure hashed key management
+│   ├── crm_lead.py               # CRM Lead extension (Scoring & SLA)
+│   ├── score_rule.py             # Rule builder engine
+│   ├── sla_policy.py             # SLA target & escalation configurations
+│   ├── pulse_event.py            # Outbound event log & queue
+│   └── pulse_job.py              # Background batch worker model
+│
+├── services/
+│   ├── __init__.py
+│   ├── auth.py                   # API Key & JWT authorization hooks
+│   ├── scoring_engine.py         # Lead score calculator logic
+│   ├── sla_engine.py             # SLA deadline & sweep calculator
+│   └── event_bus.py              # bus.bus notification wrapper
+│
+├── static/
+│   └── src/
+│       ├── pulse_dashboard.js    # Root OWL Client Action
+│       ├── pulse_lead_card.js    # Lead Card OWL Component
+│       ├── pulse_bus_service.js  # Custom Bus Listener Service
+│       ├── pulse_dashboard.xml   # QWeb templates for OWL
+│       └── pulse_dashboard.scss  # Dashboard styling
+│
+├── security/
+│   ├── ir.model.access.csv       # ACL permissions
+│   └── security_groups.xml       # User, Manager & Integration Admin rules
+│
+├── data/
+│   └── cron_jobs.xml             # SLA sweeps & batch re-scoring cron jobs
+│
+├── views/
+│   ├── crm_lead_views.xml        # CRM Lead form & kanban extensions
+│   ├── pulse_config_views.xml    # Pulse management views
+│   └── menu_items.xml            # Client Action & module menus
+│
+├── report/
+│   ├── pipeline_sla_report.xml   # QWeb PDF board report template
+│   └── opportunity_onepager.xml  # Single Deal PDF summary template
+│
+└── tests/
+    ├── test_api.py               # REST API & Rate limit unit tests
+    ├── test_scoring.py           # Scoring engine tests
+    └── test_sla.py               # SLA calculation & escalation tests
 
 ## 🚀 Installation & Setup
 
