@@ -271,5 +271,5 @@ This module is distributed under the **LGPL-3.0 (GNU Lesser General Public Licen
 
 ---
 
-**Developed & Maintained by:** [Muhammad Muneeb Azam](https://github.com/muneebazam)  
+**Developed & Maintained by:** [Muhammad Muneeb Azam](https://github.com/mmuneebazam)
 *Full-Stack Software Developer & Odoo Specialist*
